@@ -45,6 +45,8 @@ const visualizer = document.querySelector(".visualizer");
 const keyboard = document.querySelector("#keyboard");
 const canvas = document.querySelector("#pianoRoll");
 const ctx = canvas.getContext("2d");
+const appearanceDrawer = document.querySelector("#appearanceDrawer");
+const appearanceToggleButton = document.querySelector("#appearanceToggleButton");
 const midiLibrary = document.querySelector("#midiLibrary");
 const libraryToggleButton = document.querySelector("#libraryToggleButton");
 const libraryFolderButton = document.querySelector("#libraryFolderButton");
@@ -289,7 +291,9 @@ fileInput.addEventListener("change", async (event) => {
 });
 
 libraryToggleButton.addEventListener("click", () => {
-  setLibraryCollapsed(!midiLibrary.classList.contains("collapsed"));
+  const shouldOpen = midiLibrary.classList.contains("collapsed");
+  if (shouldOpen) closeAppearancePanel();
+  setLibraryCollapsed(!shouldOpen);
 });
 
 libraryFolderButton.addEventListener("click", () => {
@@ -304,11 +308,18 @@ libraryFolderInput.addEventListener("change", () => {
   activeLibraryPath = "";
   librarySearchInput.value = "";
   renderLibraryList();
+  closeAppearancePanel();
   setLibraryCollapsed(false);
 });
 
 librarySearchInput.addEventListener("input", () => {
   renderLibraryList();
+});
+
+appearanceToggleButton.addEventListener("click", () => {
+  const shouldOpen = appearanceDrawer.classList.contains("collapsed");
+  if (shouldOpen) setLibraryCollapsed(true);
+  setAppearanceCollapsed(!shouldOpen);
 });
 
 playPauseButton.addEventListener("click", async () => {
@@ -475,6 +486,7 @@ syncAppearanceLabels();
 startDelayValue.textContent = `${Number(startDelayRange.value).toFixed(1)}s`;
 updateEmptyState();
 renderLibraryList();
+syncDrawerState();
 
 async function loadMidiFile(file, libraryPath = "") {
   stopPlayback();
@@ -502,7 +514,26 @@ async function loadMidiFile(file, libraryPath = "") {
 
 function setLibraryCollapsed(collapsed) {
   midiLibrary.classList.toggle("collapsed", collapsed);
+  midiLibrary.classList.toggle("open", !collapsed);
   libraryToggleButton.setAttribute("aria-expanded", String(!collapsed));
+  syncDrawerState();
+}
+
+function setAppearanceCollapsed(collapsed) {
+  appearanceDrawer.classList.toggle("collapsed", collapsed);
+  appearanceDrawer.classList.toggle("open", !collapsed);
+  appearanceToggleButton.setAttribute("aria-expanded", String(!collapsed));
+  syncDrawerState();
+}
+
+function closeAppearancePanel() {
+  setAppearanceCollapsed(true);
+}
+
+function syncDrawerState() {
+  const hasOpenDrawer =
+    appearanceDrawer.classList.contains("open") || midiLibrary.classList.contains("open");
+  document.body.classList.toggle("drawerOpen", hasOpenDrawer);
 }
 
 function renderLibraryList() {

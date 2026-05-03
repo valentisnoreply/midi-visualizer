@@ -74,8 +74,11 @@
         <div class="hotkeyHint">F8 iniciar | F9 pausar | F10 parar/limpar | F11 reiniciar</div>
       </section>
 
-      <details class="appearancePanel">
-        <summary>Aparência</summary>
+      <aside id="appearanceDrawer" class="sideDrawer appearanceDrawer collapsed" aria-label="Editor de aparencia">
+        <button id="appearanceToggleButton" class="drawerTab" type="button" aria-expanded="false">
+          Aparencia
+        </button>
+        <div class="drawerPanel appearancePanel">
         <div class="presetBar">
           <label for="appearancePresetSelect">
             <span>Preset</span>
@@ -157,7 +160,8 @@
             <output id="gridOpacityValue">12%</output>
           </label>
         </div>
-      </details>
+        </div>
+      </aside>
 
       <section class="visualizer fallingMode" aria-label="Visualizador do arquivo MIDI">
         <aside id="keyboard" class="keyboard" aria-hidden="true"></aside>
@@ -188,11 +192,11 @@
       </section>
     </main>
 
-    <aside id="midiLibrary" class="midiLibrary collapsed" aria-label="Biblioteca de musicas MIDI">
-      <button id="libraryToggleButton" class="libraryToggle" type="button" aria-expanded="false">
+    <aside id="midiLibrary" class="sideDrawer midiLibrary collapsed" aria-label="Biblioteca de musicas MIDI">
+      <button id="libraryToggleButton" class="drawerTab" type="button" aria-expanded="false">
         Biblioteca
       </button>
-      <div class="libraryPanel">
+      <div class="drawerPanel libraryPanel">
         <div class="libraryHeader">
           <div>
             <strong>Biblioteca MIDI</strong>
