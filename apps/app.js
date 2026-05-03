@@ -45,6 +45,15 @@ const visualizer = document.querySelector(".visualizer");
 const keyboard = document.querySelector("#keyboard");
 const canvas = document.querySelector("#pianoRoll");
 const ctx = canvas.getContext("2d");
+const appearanceDrawer = document.querySelector("#appearanceDrawer");
+const appearanceToggleButton = document.querySelector("#appearanceToggleButton");
+const midiLibrary = document.querySelector("#midiLibrary");
+const libraryToggleButton = document.querySelector("#libraryToggleButton");
+const libraryFolderButton = document.querySelector("#libraryFolderButton");
+const libraryFolderInput = document.querySelector("#libraryFolderInput");
+const librarySearchInput = document.querySelector("#librarySearchInput");
+const libraryStatus = document.querySelector("#libraryStatus");
+const libraryList = document.querySelector("#libraryList");
 
 const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const MAX_OVERLAPPED_SAME_NOTE = 1;
@@ -262,6 +271,8 @@ let pendingStartInterval = 0;
 let pendingStartAt = 0;
 let pendingStart = false;
 let stoppedBlank = false;
+let libraryFiles = [];
+let activeLibraryPath = "";
 let playback = {
   playing: false,
   position: 0,
@@ -275,23 +286,40 @@ fileInput.addEventListener("change", async (event) => {
   const [file] = event.target.files;
   if (!file) return;
 
-  stopPlayback();
-  fileSummary.textContent = "Lendo arquivo...";
+  await loadMidiFile(file);
+  fileInput.value = "";
+});
 
-  try {
-    const buffer = await file.arrayBuffer();
-    song = parseMidi(buffer, file.name);
-    playback.position = 0;
-    stoppedBlank = false;
-    particles = [];
-    emittedNoteKeys = new Set();
-    updateLoadedState(file.name);
-    draw();
-  } catch (error) {
-    song = null;
-    updateEmptyState();
-    fileSummary.textContent = error.message || "Nao foi possivel ler este arquivo MIDI.";
-  }
+libraryToggleButton.addEventListener("click", () => {
+  const shouldOpen = midiLibrary.classList.contains("collapsed");
+  if (shouldOpen) closeAppearancePanel();
+  setLibraryCollapsed(!shouldOpen);
+});
+
+libraryFolderButton.addEventListener("click", () => {
+  libraryFolderInput.click();
+});
+
+libraryFolderInput.addEventListener("change", () => {
+  libraryFiles = Array.from(libraryFolderInput.files || [])
+    .filter((file) => isMidiFile(file.name))
+    .sort((a, b) => getLibraryPath(a).localeCompare(getLibraryPath(b), "pt-BR"));
+
+  activeLibraryPath = "";
+  librarySearchInput.value = "";
+  renderLibraryList();
+  closeAppearancePanel();
+  setLibraryCollapsed(false);
+});
+
+librarySearchInput.addEventListener("input", () => {
+  renderLibraryList();
+});
+
+appearanceToggleButton.addEventListener("click", () => {
+  const shouldOpen = appearanceDrawer.classList.contains("collapsed");
+  if (shouldOpen) setLibraryCollapsed(true);
+  setAppearanceCollapsed(!shouldOpen);
 });
 
 playPauseButton.addEventListener("click", async () => {
@@ -457,6 +485,121 @@ setViewMode(viewMode);
 syncAppearanceLabels();
 startDelayValue.textContent = `${Number(startDelayRange.value).toFixed(1)}s`;
 updateEmptyState();
+renderLibraryList();
+syncDrawerState();
+
+async function loadMidiFile(file, libraryPath = "") {
+  stopPlayback();
+  fileSummary.textContent = "Lendo arquivo...";
+
+  try {
+    const buffer = await file.arrayBuffer();
+    song = parseMidi(buffer, file.name);
+    playback.position = 0;
+    stoppedBlank = false;
+    particles = [];
+    emittedNoteKeys = new Set();
+    activeLibraryPath = libraryPath;
+    updateLoadedState(file.name);
+    renderLibraryList();
+    draw();
+  } catch (error) {
+    song = null;
+    activeLibraryPath = "";
+    updateEmptyState();
+    renderLibraryList();
+    fileSummary.textContent = error.message || "Nao foi possivel ler este arquivo MIDI.";
+  }
+}
+
+function setLibraryCollapsed(collapsed) {
+  midiLibrary.classList.toggle("collapsed", collapsed);
+  midiLibrary.classList.toggle("open", !collapsed);
+  libraryToggleButton.setAttribute("aria-expanded", String(!collapsed));
+  syncDrawerState();
+}
+
+function setAppearanceCollapsed(collapsed) {
+  appearanceDrawer.classList.toggle("collapsed", collapsed);
+  appearanceDrawer.classList.toggle("open", !collapsed);
+  appearanceToggleButton.setAttribute("aria-expanded", String(!collapsed));
+  syncDrawerState();
+}
+
+function closeAppearancePanel() {
+  setAppearanceCollapsed(true);
+}
+
+function syncDrawerState() {
+  const hasOpenDrawer =
+    appearanceDrawer.classList.contains("open") || midiLibrary.classList.contains("open");
+  document.body.classList.toggle("drawerOpen", hasOpenDrawer);
+}
+
+function renderLibraryList() {
+  const query = librarySearchInput.value.trim().toLowerCase();
+  const visibleFiles = libraryFiles.filter((file) =>
+    getLibraryPath(file).toLowerCase().includes(query)
+  );
+
+  libraryList.innerHTML = "";
+  libraryStatus.textContent = libraryFiles.length
+    ? `${libraryFiles.length} MIDI(s) carregado(s)`
+    : "Nenhuma pasta selecionada";
+
+  if (!libraryFiles.length) {
+    libraryList.append(createLibraryEmpty("Selecione uma pasta com arquivos .mid ou .midi."));
+    return;
+  }
+
+  if (!visibleFiles.length) {
+    libraryList.append(createLibraryEmpty("Nenhuma musica encontrada nesse filtro."));
+    return;
+  }
+
+  for (const file of visibleFiles) {
+    const path = getLibraryPath(file);
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "librarySong";
+    item.classList.toggle("active", path === activeLibraryPath);
+    item.setAttribute("role", "option");
+    item.setAttribute("aria-selected", String(path === activeLibraryPath));
+    item.addEventListener("click", () => loadMidiFile(file, path));
+
+    const text = document.createElement("span");
+    text.className = "librarySongText";
+
+    const title = document.createElement("span");
+    title.className = "librarySongTitle";
+    title.textContent = file.name.replace(/\.(mid|midi)$/i, "");
+
+    const location = document.createElement("span");
+    location.className = "librarySongPath";
+    location.textContent = path.includes("/")
+      ? path.split("/").slice(0, -1).join("/")
+      : "Pasta selecionada";
+
+    text.append(title, location);
+    item.append(text);
+    libraryList.append(item);
+  }
+}
+
+function createLibraryEmpty(text) {
+  const empty = document.createElement("div");
+  empty.className = "libraryEmpty";
+  empty.textContent = text;
+  return empty;
+}
+
+function getLibraryPath(file) {
+  return file.webkitRelativePath || file.name;
+}
+
+function isMidiFile(fileName) {
+  return /\.(mid|midi)$/i.test(fileName);
+}
 
 function parseMidi(buffer, fileName) {
   const reader = new MidiReader(buffer);
