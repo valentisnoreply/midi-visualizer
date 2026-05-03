@@ -2,16 +2,6 @@
 
 Visualizador web estatico para arquivos `.mid` e `.midi`.
 
-## Como usar
-
-1. Abra `index.html` no navegador.
-2. Clique em `Abrir MIDI` e escolha um arquivo `.mid`.
-3. Use `Tocar`, `Pausar`, `Reiniciar`, a barra de progresso e o controle de velocidade.
-
-O app faz o parse do arquivo localmente no navegador, desenha as notas em piano roll e usa Web Audio para uma reproducao sintetizada simples.
-
-A aba `Biblioteca`, na lateral direita, permite escolher uma pasta com arquivos `.mid/.midi`, filtrar a lista e carregar musicas com um clique. Ela fica sobreposta e recolhivel, sem mudar as proporcoes do visualizador.
-
 O visualizador tem dois modos:
 
 - `Notas caindo`: notas descem ate o teclado, pensado para gravar e usar como overlay em video.
