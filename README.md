@@ -1,7 +1,7 @@
 # MID Visualizer
 
 Visualizador web estatico para arquivos `.mid` e `.midi`.
-
+https://valentisnoreply.github.io/midi-visualizer/
 ## Como usar
 
 1. Abra `index.html` no navegador.
