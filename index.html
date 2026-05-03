@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MID Visualizer</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div>
+          <h1>MID Visualizer</h1>
+          <p id="fileSummary">Abra um arquivo .mid para visualizar as notas.</p>
+        </div>
+        <label class="fileButton">
+          <input id="fileInput" type="file" accept=".mid,.midi,audio/midi,audio/x-midi" />
+          Abrir MIDI
+        </label>
+      </header>
+
+      <section class="transport" aria-label="Controles de reproducao">
+        <button id="playPauseButton" class="primary" type="button" disabled>Tocar</button>
+        <button id="stopButton" type="button" disabled>Parar</button>
+        <button id="restartButton" type="button" disabled>Reiniciar</button>
+
+        <div class="modeToggle" aria-label="Modo de visualizacao">
+          <button id="fallingModeButton" type="button" class="active">Notas caindo</button>
+          <button id="rollModeButton" type="button">Piano roll</button>
+        </div>
+
+        <label class="speedControl" for="speedRange">
+          <span>Velocidade</span>
+          <input id="speedRange" type="range" min="0.25" max="2" value="1" step="0.05" />
+          <output id="speedValue" for="speedRange">1.00x</output>
+        </label>
+
+        <label class="timbreControl" for="timbreSelect">
+          <span>Timbre</span>
+          <select id="timbreSelect">
+            <option value="visualOnly">Visual only (sem som)</option>
+            <option value="softPiano">Piano suave</option>
+            <option value="brightPiano">Piano claro</option>
+            <option value="bell">Bell</option>
+            <option value="organ">Organ</option>
+            <option value="pluck">Pluck</option>
+            <option value="pad">Pad</option>
+            <option value="chip">Chip</option>
+          </select>
+        </label>
+
+        <div class="timeReadout">
+          <span id="currentTime">0:00.0</span>
+          <span>/</span>
+          <span id="durationTime">0:00.0</span>
+        </div>
+      </section>
+
+      <section class="timeline">
+        <input id="seekRange" type="range" min="0" max="1000" value="0" step="1" disabled />
+      </section>
+
+      <section class="overlayControls" aria-label="Controles do overlay">
+        <label for="startDelayRange">
+          <span>Delay inicial</span>
+          <input id="startDelayRange" type="range" min="0" max="10" value="3" step="0.1" />
+          <output id="startDelayValue" for="startDelayRange">3.0s</output>
+        </label>
+        <label for="fallSecondsRange">
+          <span>Queda</span>
+          <input id="fallSecondsRange" type="range" min="1.5" max="6" value="3.5" step="0.1" />
+          <output id="fallSecondsValue" for="fallSecondsRange">3.5s</output>
+        </label>
+        <div class="hotkeyHint">F8 iniciar | F9 pausar | F10 parar/limpar | F11 reiniciar</div>
+      </section>
+
+      <details class="appearancePanel">
+        <summary>Aparência</summary>
+        <div class="presetBar">
+          <label for="appearancePresetSelect">
+            <span>Preset</span>
+            <select id="appearancePresetSelect">
+              <option value="">Escolher preset</option>
+              <option value="neon">Neon</option>
+              <option value="crystal">Crystal</option>
+              <option value="minimal">Minimal</option>
+              <option value="warm">Warm</option>
+            </select>
+          </label>
+          <button id="resetAppearanceButton" type="button">Resetar aparência</button>
+        </div>
+        <div class="customPresetBar">
+          <label for="customPresetNameInput">
+            <span>Nome do preset</span>
+            <input id="customPresetNameInput" type="text" placeholder="Meu estilo" maxlength="40" />
+          </label>
+          <button id="saveAppearancePresetButton" type="button">Salvar aparência</button>
+          <button id="deleteAppearancePresetButton" type="button">Excluir preset</button>
+        </div>
+        <div class="appearanceGrid">
+          <label>
+            <span>Fundo</span>
+            <input id="backgroundColorInput" type="color" value="#000000" />
+          </label>
+          <label>
+            <span>Notas</span>
+            <select id="noteColorModeSelect">
+              <option value="channel">Por canal</option>
+              <option value="single">Cor unica</option>
+              <option value="velocity">Por intensidade</option>
+            </select>
+          </label>
+          <label>
+            <span>Cor unica</span>
+            <input id="noteColorInput" type="color" value="#2fd1a6" />
+          </label>
+          <label>
+            <span>Grade</span>
+            <input id="gridColorInput" type="color" value="#ffffff" />
+          </label>
+          <label>
+            <span>Linha</span>
+            <input id="hitLineColorInput" type="color" value="#ffffff" />
+          </label>
+          <label>
+            <span>Formato</span>
+            <select id="noteShapeSelect">
+              <option value="round">Arredondado</option>
+              <option value="pill">Pill</option>
+              <option value="square">Quadrado</option>
+              <option value="diamond">Diamante</option>
+            </select>
+          </label>
+          <label>
+            <span>Brilho</span>
+            <input id="glowRange" type="range" min="0" max="36" value="14" step="1" />
+            <output id="glowValue">14px</output>
+          </label>
+          <label>
+            <span>Rastro</span>
+            <input id="trailRange" type="range" min="0" max="1" value="0.35" step="0.05" />
+            <output id="trailValue">35%</output>
+          </label>
+          <label>
+            <span>Partículas</span>
+            <input id="particlesRange" type="range" min="0" max="1" value="0.45" step="0.05" />
+            <output id="particlesValue">45%</output>
+          </label>
+          <label>
+            <span>Reflexo</span>
+            <input id="reflectionRange" type="range" min="0" max="1" value="0.3" step="0.05" />
+            <output id="reflectionValue">30%</output>
+          </label>
+          <label>
+            <span>Opacidade grade</span>
+            <input id="gridOpacityRange" type="range" min="0" max="1" value="0.12" step="0.02" />
+            <output id="gridOpacityValue">12%</output>
+          </label>
+        </div>
+      </details>
+
+      <section class="visualizer fallingMode" aria-label="Visualizador do arquivo MIDI">
+        <aside id="keyboard" class="keyboard" aria-hidden="true"></aside>
+        <canvas id="pianoRoll"></canvas>
+        <div id="emptyState" class="emptyState">
+          <strong>Nenhum MIDI carregado</strong>
+          <span>Escolha um arquivo para ver as notas caindo e ouvir uma reproducao simples.</span>
+        </div>
+      </section>
+
+      <section class="details" aria-label="Detalhes do arquivo MIDI">
+        <div>
+          <span class="label">Notas</span>
+          <strong id="noteCount">0</strong>
+        </div>
+        <div>
+          <span class="label">Faixa</span>
+          <strong id="noteRange">-</strong>
+        </div>
+        <div>
+          <span class="label">Canais</span>
+          <strong id="channelCount">0</strong>
+        </div>
+        <div>
+          <span class="label">Tempo inicial</span>
+          <strong id="tempoValue">120 BPM</strong>
+        </div>
+      </section>
+    </main>
+
+    <aside id="midiLibrary" class="midiLibrary collapsed" aria-label="Biblioteca de musicas MIDI">
+      <button id="libraryToggleButton" class="libraryToggle" type="button" aria-expanded="false">
+        Biblioteca
+      </button>
+      <div class="libraryPanel">
+        <div class="libraryHeader">
+          <div>
+            <strong>Biblioteca MIDI</strong>
+            <span id="libraryStatus">Nenhuma pasta selecionada</span>
+          </div>
+          <button id="libraryFolderButton" type="button">Pasta</button>
+          <input
+            id="libraryFolderInput"
+            type="file"
+            accept=".mid,.midi,audio/midi,audio/x-midi"
+            multiple
+            webkitdirectory
+          />
+        </div>
+        <input id="librarySearchInput" class="librarySearch" type="search" placeholder="Filtrar musicas" />
+        <div id="libraryList" class="libraryList" role="listbox" aria-label="Musicas MIDI"></div>
+      </div>
+    </aside>
+
+    <script src="app.js"></script>
+  </body>
+</html>
